@@ -9,7 +9,7 @@ from flask import Flask
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -41,28 +41,35 @@ def run_flask():
     port = int(os.environ.get("PORT", 5000))
     server.run(host="0.0.0.0", port=port)
 
-# --- ЛОГИКА БОТА (без изменений) ---
-async def get_gemini_response(chat_id: int, text: str) -> str:
+# Инициализация Groq клиента (сделайте это ДО определения функции, где-нибудь после загрузки переменных)
+groq_client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("GROQ_API_KEY")
+)
+
+async def get_groq_response(chat_id: int, text: str) -> str:
     if chat_id not in conversations:
         conversations[chat_id] = []
 
-    # ✅ ПРАВИЛЬНЫЙ формат: parts = [{"text": "сообщение"}]
-    conversations[chat_id].append({"role": "user", "parts": [{"text": text}]})
+    # Добавляем сообщение пользователя в историю
+    conversations[chat_id].append({"role": "user", "content": text})
 
-    # Берём последние 20 сообщений
+    # Берём последние 20 сообщений контекста
     history = conversations[chat_id][-20:]
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",   # актуальная бесплатная модель
-        contents=history,
-        config={
-            "system_instruction": SYSTEM_PROMPT
-        }
-    )
-    reply = response.text
+    # Формируем messages с системным промптом в начале
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history
 
-    # Сохраняем ответ тоже в правильном формате
-    conversations[chat_id].append({"role": "model", "parts": [{"text": reply}]})
+    response = groq_client.chat.completions.create(
+        model="llama-3.3-70b-versatile",   # Отличная бесплатная модель, понимает русский
+        messages=messages,
+        temperature=0.7,
+        max_tokens=100                      # Чтобы ответы были короткими, как вы любите
+    )
+    reply = response.choices[0].message.content
+
+    # Сохраняем ответ бота в историю
+    conversations[chat_id].append({"role": "assistant", "content": reply})
     return reply
 
 @dp.message(Command("start"))
@@ -87,7 +94,7 @@ async def group_message_random(message: types.Message):
     await bot.send_chat_action(chat_id=chat_id, action="typing")
 
     try:
-        reply = await get_gemini_response(chat_id, message.text)
+        reply = await get_groq_response(chat_id, message.text)
         await message.reply(reply)
     except Exception as e:
         import traceback
