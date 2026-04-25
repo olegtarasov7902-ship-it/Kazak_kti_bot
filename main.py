@@ -46,18 +46,23 @@ async def get_gemini_response(chat_id: int, text: str) -> str:
     if chat_id not in conversations:
         conversations[chat_id] = []
 
-    conversations[chat_id].append({"role": "user", "parts": [text]})
+    # ✅ Правильный формат: parts содержит объекты {"text": ...}
+    conversations[chat_id].append({"role": "user", "parts": [{"text": text}]})
+
+    # Берём последние 20 сообщений
     history = conversations[chat_id][-20:]
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",   # 👈 актуальная бесплатная модель (если 2.0 не работает)
         contents=history,
         config={
             "system_instruction": SYSTEM_PROMPT
         }
     )
     reply = response.text
-    conversations[chat_id].append({"role": "model", "parts": [reply]})
+
+    # ✅ Сохраняем ответ в том же формате
+    conversations[chat_id].append({"role": "model", "parts": [{"text": reply}]})
     return reply
 
 @dp.message(Command("start"))
