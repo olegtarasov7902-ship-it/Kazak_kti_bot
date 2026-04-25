@@ -62,7 +62,7 @@ async def get_gemini_response(chat_id: int, text: str) -> str:
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    await message.answer("Здравствуйте, ребят. Дедушка Казак на связи. Задавайте вопросы, только не всё сразу – это вам не школа, тут думать надо.")
+    await message.answer("Здравствуйте, ребят.Казак на связи. Задавайте вопросы, только не всё сразу – это вам не школа, тут думать надо.")
 
 @dp.message(F.text, F.chat.type.in_({"group", "supergroup"}))
 async def group_message_random(message: types.Message):
