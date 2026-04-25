@@ -90,7 +90,10 @@ async def group_message_random(message: types.Message):
         reply = await get_gemini_response(chat_id, message.text)
         await message.reply(reply)
     except Exception as e:
-        await message.reply(f"Ой, кажется шквал помешал: {type(e).__name__}")
+        import traceback
+        err_msg = f"Шквал: {type(e).__name__}\n{str(e)}\n\n{traceback.format_exc()}"
+        print(err_msg)                     # ✅ Теперь попадёт в логи Render
+        await message.reply(f"Ой, кажется шквал: {type(e).__name__}. Детали в логах.")
 
 # --- ТОЧКА ВХОДА ---
 async def main():
