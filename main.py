@@ -1,26 +1,24 @@
-import os
-import asyncio
-import random
-import threading
+import os, asyncio, random, threading
 from datetime import datetime, timedelta
-
-# Классический HTTP-сервер на Flask для проверки порта
 from flask import Flask
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Загружаем переменные окружения
 load_dotenv()
-
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Ты — дружелюбный пират.")
 REPLY_CHANCE = float(os.getenv("REPLY_CHANCE", "0.2"))
 
+groq_client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=GROQ_API_KEY)
+
 # Инициализация ИИ и бота
-client = genai.Client(api_key=GEMINI_API_KEY)
+groq_client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("GROQ_API_KEY")
+)
 bot = Bot(token=TELEGRAM_TOKEN)
 dp = Dispatcher()
 
