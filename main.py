@@ -53,7 +53,7 @@ async def get_gemini_response(chat_id: int, text: str) -> str:
     history = conversations[chat_id][-20:]
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash",   # актуальная бесплатная модель
+        model="gemini-2.0-flash",   # актуальная бесплатная модель
         contents=history,
         config={
             "system_instruction": SYSTEM_PROMPT
